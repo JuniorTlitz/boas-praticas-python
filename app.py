@@ -38,19 +38,19 @@ class Usuario(BaseModel):
     nome: str
 
 
-Produtos = []
-ContadorProduto = 1
+produtos = []
+contador_produto = 1
 
 
-Usuarios = []
+usuarios = []
 
-ContadorUsuario = 1
+contador_usuario = 1
 
 
-ConstanteMensagemHome = "Bem-vindo à API de Recomendação de Produtos"
+MESSAGEM_HOME = "Bem-vindo à API de Recomendação de Produtos"
 
 # Histórico de compras em memória
-HistoricoDeCompras = {}
+historico_de_compras = {}
 
 # Criando o App
 app = FastAPI()
@@ -60,8 +60,8 @@ app = FastAPI()
 
 @app.get("/")
 def home():
-    global ConstanteMensagemHome
-    return {"mensagem": ConstanteMensagemHome}
+    global MESSAGEM_HOME
+    return {"mensagem": MESSAGEM_HOME}
 
 
 # Rota para cadastrar produtos
@@ -69,10 +69,10 @@ def home():
 
 @app.post("/produtos/", response_model=Produto)
 def criarproduto(produto: CriarProduto):
-    global ContadorProduto
-    NovoProduto = Produto(id=ContadorProduto, **produto.model_dump())
-    Produtos.append(NovoProduto)
-    ContadorProduto += 1
+    global contador_produto
+    NovoProduto = Produto(id=contador_produto, **produto.model_dump())
+    produtos.append(NovoProduto)
+    contador_produto += 1
     return NovoProduto
 
 
@@ -81,7 +81,7 @@ def criarproduto(produto: CriarProduto):
 
 @app.get("/produtos/", response_model=List[Produto])
 def listarprodutos():
-    return Produtos
+    return produtos
 
 
 # Rota para simular a criação do histórico de compras de um usuário
@@ -89,9 +89,9 @@ def listarprodutos():
 
 @app.post("/historico_compras/{usuario_id}")
 def adicionarhistoricocompras(usuario_id: int, compras: HistoricoCompras):
-    if usuario_id not in [usuario.id for usuario in Usuarios]:
+    if usuario_id not in [usuario.id for usuario in usuarios]:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
-    HistoricoDeCompras[usuario_id] = compras.produtos_ids
+    historico_de_compras[usuario_id] = compras.produtos_ids
     return {"mensagem": "Histórico de compras atualizado"}
 
 
@@ -100,7 +100,7 @@ def adicionarhistoricocompras(usuario_id: int, compras: HistoricoCompras):
 
 @app.post("/recomendacoes/{usuario_id}", response_model=List[Produto])
 def recomendarprodutos(usuario_id: int, preferencias: Preferencias):
-    if usuario_id not in HistoricoDeCompras:
+    if usuario_id not in historico_de_compras:
         raise HTTPException(
             status_code=404, detail="Histórico de compras não encontrado"
         )
@@ -111,8 +111,8 @@ def recomendarprodutos(usuario_id: int, preferencias: Preferencias):
 
     produtos_recomendados = [
         produto
-        for produto_id in HistoricoDeCompras[usuario_id]
-        for produto in Produtos
+        for produto_id in historico_de_compras[usuario_id]
+        for produto in produtos
         if produto.id == produto_id
     ]
 
@@ -134,10 +134,10 @@ def recomendarprodutos(usuario_id: int, preferencias: Preferencias):
 
 @app.post("/usuarios/", response_model=Usuario)
 def criarusuario(nome: str):
-    global ContadorUsuario
-    NovoUsuario = Usuario(id=ContadorUsuario, nome=nome)
-    Usuarios.append(NovoUsuario)
-    ContadorUsuario += 1
+    global contador_usuario
+    NovoUsuario = Usuario(id=contador_usuario, nome=nome)
+    usuarios.append(NovoUsuario)
+    contador_usuario += 1
     return NovoUsuario
 
 
@@ -146,4 +146,4 @@ def criarusuario(nome: str):
 
 @app.get("/usuarios/", response_model=List[Usuario])
 def listarusuarios():
-    return Usuarios
+    return usuarios
